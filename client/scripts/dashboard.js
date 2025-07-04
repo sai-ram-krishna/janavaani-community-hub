@@ -48,6 +48,13 @@ function checkAuthentication() {
     try {
         currentUser = JSON.parse(userData);
         console.log('✅ User authenticated:', currentUser.name);
+        console.log('🔍 User data full object:', currentUser);
+        console.log('🔍 Available user properties:', Object.keys(currentUser));
+        console.log('🔍 User ID variations:', {
+            id: currentUser.id,
+            _id: currentUser._id,
+            userId: currentUser.userId
+        });
         
         // Redirect government officials to their department dashboard
         if (currentUser.userType === 'government') {
@@ -269,12 +276,21 @@ async function handleIssueSubmission(event) {
                 fullAddress: `${formData.get('address')}, ${formData.get('village')}, ${formData.get('mandal')}, ${formData.get('district')}, ${formData.get('state')}`
             },
             submittedBy: {
-                userId: currentUser.id,
+                userId: currentUser.id || currentUser._id || currentUser.userId,
                 name: currentUser.name,
                 email: currentUser.email,
                 phone: currentUser.phone || 'Not provided'
             }
         };
+        
+        console.log('🔍 ISSUE SUBMISSION DEBUG:');
+        console.log('   Current user:', currentUser);
+        console.log('   User ID being sent:', issueData.submittedBy.userId);
+        console.log('   Issue data being sent:', issueData);
+        console.log('   Form data entries:');
+        for (let [key, value] of formData.entries()) {
+            console.log(`     ${key}: ${value}`);
+        }
         
         // Validate required fields
         if (!issueData.title || !issueData.description || !issueData.category || 
@@ -302,7 +318,11 @@ async function handleIssueSubmission(event) {
             body: JSON.stringify(issueData)
         });
         
+        console.log('🔍 Server response status:', response.status);
+        console.log('🔍 Server response headers:', response.headers);
+        
         const result = await response.json();
+        console.log('🔍 Server response data:', result);
         
         if (response.ok) {
             const issueId = result.issue._id;
@@ -322,6 +342,7 @@ async function handleIssueSubmission(event) {
             // Switch to my issues section
             showSection('my-issues');
         } else {
+            console.error('❌ Server error:', result);
             showNotification(result.message || 'Failed to submit issue. Please try again.', 'error');
         }
         
