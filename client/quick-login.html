@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Login - JANAVAANI</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; background: #f5f5f5; }
+        .login-container { max-width: 400px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #0056b3; }
+        .message { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .dashboard-link { text-align: center; margin-top: 20px; }
+        .dashboard-link a { color: #007bff; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Quick Login for Dashboard Testing</h2>
+        
+        <div id="register-section">
+            <h3>Register New User</h3>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="regName">Name:</label>
+                    <input type="text" id="regName" value="Test User" required>
+                </div>
+                <div class="form-group">
+                    <label for="regEmail">Email:</label>
+                    <input type="email" id="regEmail" value="test@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">Password:</label>
+                    <input type="password" id="regPassword" value="password123" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPhone">Phone:</label>
+                    <input type="tel" id="regPhone" value="9876543210" required>
+                </div>
+                <div class="form-group">
+                    <label for="regUserType">User Type:</label>
+                    <select id="regUserType" onchange="toggleDepartment()">
+                        <option value="citizen">Citizen</option>
+                        <option value="government">Government Official</option>
+                    </select>
+                </div>
+                <div class="form-group" id="departmentGroup" style="display: none;">
+                    <label for="regDepartment">Department:</label>
+                    <select id="regDepartment">
+                        <option value="water">Water Department</option>
+                        <option value="electricity">Electricity Department</option>
+                        <option value="roads">Roads Department</option>
+                        <option value="sanitation">Sanitation Department</option>
+                        <option value="education">Education Department</option>
+                        <option value="healthcare">Healthcare Department</option>
+                        <option value="municipal">Municipal Corporation</option>
+                    </select>
+                </div>
+                <button type="submit">Register</button>
+            </form>
+        </div>
+
+        <hr style="margin: 30px 0;">
+
+        <div id="login-section">
+            <h3>Login</h3>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email:</label>
+                    <input type="email" id="loginEmail" value="testuser@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password:</label>
+                    <input type="password" id="loginPassword" value="password123" required>
+                </div>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+
+        <div id="message"></div>
+
+        <div class="dashboard-link">
+            <a href="dashboard.html" id="dashboardLink" style="display: none;">Go to Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="message ${type}">${text}</div>`;
+        }
+
+        function toggleDepartment() {
+            const userType = document.getElementById('regUserType').value;
+            const departmentGroup = document.getElementById('departmentGroup');
+            
+            if (userType === 'government') {
+                departmentGroup.style.display = 'block';
+            } else {
+                departmentGroup.style.display = 'none';
+            }
+        }
+
+        // Register form
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const userData = {
+                name: document.getElementById('regName').value,
+                email: document.getElementById('regEmail').value,
+                password: document.getElementById('regPassword').value,
+                phone: document.getElementById('regPhone').value,
+                userType: document.getElementById('regUserType').value
+            };
+
+            // Add department for government users
+            if (userData.userType === 'government') {
+                userData.department = document.getElementById('regDepartment').value;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    showMessage('User registered successfully! You can now login.', 'success');
+                } else {
+                    showMessage(data.message || 'Registration failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        });
+
+        // Login form
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const loginData = {
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(loginData)
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('janavaani_user', JSON.stringify(data.user));
+                    showMessage('Login successful! You can now access the dashboard.', 'success');
+                    document.getElementById('dashboardLink').style.display = 'block';
+                } else {
+                    showMessage(data.message || 'Login failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        });
+
+        // Check if already logged in
+        const userData = localStorage.getItem('janavaani_user');
+        if (userData) {
+            showMessage('You are already logged in!', 'success');
+            document.getElementById('dashboardLink').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

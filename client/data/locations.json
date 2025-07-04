@@ -1,0 +1,46 @@
+{
+  "Andhra Pradesh": {
+    "Anantapur": {
+      "Kalyandurg": ["Gorantla", "Kambadur"],
+      "Hindupur": ["Lepakshi", "Penukonda"]
+    },
+    "Guntur": {
+      "Tenali": ["Kollipara", "Kakumanu"],
+      "Mangalagiri": ["Tadikonda", "Pedakakani"]
+    },
+    "Chittoor": {
+      "Tirupati": ["Renigunta", "Srikalahasti"],
+      "Piler": ["Kalakada", "Madanapalle"]
+    },
+    "Krishna": {
+      "Vijayawada": ["Poranki", "Vuyyuru"],
+      "Gannavaram": ["Gudivada", "Nuzvid"]
+    },
+    "Nellore": {
+      "Atmakur": ["Vinjamur", "Varikuntapadu"],
+      "Kavali": ["Bogole", "Allur"]
+    }
+  },
+  "Telangana": {
+    "Hyderabad": {
+      "Charminar": ["Yakutpura", "Malakpet"],
+      "Secunderabad": ["Trimulgherry", "Malkajgiri"]
+    },
+    "Nizamabad": {
+      "Bodhan": ["Kotagiri", "Nasrullabad"],
+      "Armoor": ["Nandipet", "Balkonda"]
+    },
+    "Warangal": {
+      "Hanamkonda": ["Kazipet", "Ursu"],
+      "Narsampet": ["Chennaraopet", "Parvathagiri"]
+    },
+    "Ranga Reddy": {
+      "Ibrahimpatnam": ["Manchal", "Abdullapurmet"],
+      "Chevella": ["Moinabad", "Shankarpally"]
+    },
+    "Khammam": {
+      "Kothagudem": ["Bhadrachalam", "Paloncha"],
+      "Sattupalli": ["Vemsoor", "Penuballi"]
+    }
+  }
+}

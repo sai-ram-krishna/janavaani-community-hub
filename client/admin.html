@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Government Dashboard - JANAVAANI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: white;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .search-box {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 300px;
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .users-table th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .users-table td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .users-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .user-type {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .user-type.citizen {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .user-type.government {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .department {
+            background: #fff3e0;
+            color: #f57c00;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c62828;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+            
+            .users-table {
+                font-size: 14px;
+            }
+            
+            .users-table th,
+            .users-table td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏛️ Admin Dashboard</h1>
+            <p>JANAVAANI User Management System</p>
+        </div>
+
+        <div class="stats" id="statsContainer">
+            <div class="stat-card">
+                <div class="stat-number" id="totalUsers">-</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="citizenCount">-</div>
+                <div class="stat-label">Citizens</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="governmentCount">-</div>
+                <div class="stat-label">Government Officials</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="todaySignups">-</div>
+                <div class="stat-label">Today's Signups</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <a href="index.html" class="back-link">← Back to Homepage</a>
+            
+            <div class="controls">
+                <h2>Registered Users</h2>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <input type="text" class="search-box" id="searchBox" placeholder="Search users...">
+                    <button class="refresh-btn" onclick="loadUsers()">🔄 Refresh</button>
+                </div>
+            </div>
+
+            <div id="errorContainer"></div>
+            <div id="loadingContainer" class="loading">Loading users...</div>
+            
+            <div id="tableContainer" style="display: none;">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>User Type</th>
+                            <th>Department</th>
+                            <th>Joined Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <h3>No users found</h3>
+                <p>No users have signed up yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allUsers = [];
+        let isAuthenticated = false;
+
+        // Simple admin authentication
+        function authenticateAdmin() {
+            const password = prompt("Enter admin password:");
+            if (password === "admin123") { // Change this password!
+                isAuthenticated = true;
+                return true;
+            } else {
+                alert("❌ Access denied. Incorrect password.");
+                window.location.href = "index.html";
+                return false;
+            }
+        }
+
+        // Load users when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!authenticateAdmin()) return;
+            
+            loadUsers();
+            
+            // Add search functionality
+            document.getElementById('searchBox').addEventListener('input', function(e) {
+                filterUsers(e.target.value);
+            });
+        });
+
+        async function loadUsers() {
+            const loadingContainer = document.getElementById('loadingContainer');
+            const tableContainer = document.getElementById('tableContainer');
+            const errorContainer = document.getElementById('errorContainer');
+            const emptyState = document.getElementById('emptyState');
+
+            if (!isAuthenticated) return;
+
+            // Show loading
+            loadingContainer.style.display = 'block';
+            tableContainer.style.display = 'none';
+            errorContainer.innerHTML = '';
+            emptyState.style.display = 'none';
+
+            try {
+                console.log('Fetching users from admin API...');
+                
+                // Try relative URL first, fallback to full URL
+                let apiUrl = "/api/auth/admin/users";
+                
+                // Check if we're accessing via file:// protocol
+                if (window.location.protocol === 'file:') {
+                  apiUrl = "http://localhost:5000/api/auth/admin/users";
+                }
+                
+                console.log('Using API URL:', apiUrl);
+                const response = await fetch(apiUrl, {
+                    headers: {
+                        'X-API-Key': 'admin-secret-key-123' // Add API key header
+                    }
+                });
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                if (response.ok) {
+                    allUsers = data.users;
+                    updateStats(data.users);
+                    displayUsers(data.users);
+                    console.log('Successfully loaded', data.users.length, 'users');
+                } else {
+                    console.error('Server error:', data.message);
+                    showError(data.message || 'Failed to load users');
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                showError(`Failed to connect to server: ${error.message}. Make sure the server is running on port 5000.`);
+            } finally {
+                loadingContainer.style.display = 'none';
+            }
+        }
+
+        function updateStats(users) {
+            const total = users.length;
+            const citizens = users.filter(u => u.userType === 'citizen').length;
+            const government = users.filter(u => u.userType === 'government').length;
+            
+            // Calculate today's signups
+            const today = new Date().toDateString();
+            const todaySignups = users.filter(u => {
+                if (u.createdAt) {
+                    const userDate = new Date(u.createdAt).toDateString();
+                    return userDate === today;
+                }
+                return false;
+            }).length;
+
+            document.getElementById('totalUsers').textContent = total;
+            document.getElementById('citizenCount').textContent = citizens;
+            document.getElementById('governmentCount').textContent = government;
+            document.getElementById('todaySignups').textContent = todaySignups;
+        }
+
+        function displayUsers(users) {
+            const tableBody = document.getElementById('usersTableBody');
+            const tableContainer = document.getElementById('tableContainer');
+            const emptyState = document.getElementById('emptyState');
+
+            if (users.length === 0) {
+                tableContainer.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            tableContainer.style.display = 'block';
+            emptyState.style.display = 'none';
+
+            tableBody.innerHTML = users.map(user => `
+                <tr>
+                    <td><strong>${user.name || 'N/A'}</strong></td>
+                    <td>${user.email || 'N/A'}</td>
+                    <td>${user.phone || 'N/A'}</td>
+                    <td>
+                        <span class="user-type ${user.userType || 'citizen'}">
+                            ${user.userType || 'citizen'}
+                        </span>
+                    </td>
+                    <td>
+                        ${user.department ? `<span class="department">${user.department}</span>` : '-'}
+                    </td>
+                    <td>${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function filterUsers(searchTerm) {
+            if (!searchTerm) {
+                displayUsers(allUsers);
+                return;
+            }
+
+            const filtered = allUsers.filter(user => 
+                user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                user.phone.includes(searchTerm) ||
+                user.userType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (user.department && user.department.toLowerCase().includes(searchTerm.toLowerCase()))
+            );
+
+            displayUsers(filtered);
+        }
+
+        function showError(message) {
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.innerHTML = `
+                <div class="error">
+                    <strong>Error:</strong> ${message}
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Account – JANAVAANI</title>
+  <link rel="stylesheet" href="styles/styles1.css">
+  <script src="scripts/signup.js" defer></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+  <div class="form-container">
+    <h2>Create Your Account</h2>
+    <form action="#" method="POST" class="signup-form">
+      <input type="text" id="fullName" name="fullName" placeholder="Full Name" required>
+      <input type="email" id="email" name="email" placeholder="Email Address" required>
+      <input type="tel" id="phone" name="phone" placeholder="Phone Number" required>
+      
+      <select id="userType" name="userType" required>
+        <option value="">Select User Type</option>
+        <option value="citizen">Citizen</option>
+        <option value="government">Government Official</option>
+      </select>
+      
+      <select id="department" name="department" style="display:none;">
+        <option value="">Select Department</option>
+        <option value="water">Water Department</option>
+        <option value="electricity">Electricity Board</option>
+        <option value="roads">Roads & Transport</option>
+        <option value="sanitation">Sanitation</option>
+        <option value="education">Education</option>
+        <option value="healthcare">Healthcare</option>
+        <option value="police">Police</option>
+        <option value="municipal">Municipal Corporation</option>
+      </select>
+      
+      <input type="password" id="password" name="password" placeholder="Password" minlength="6" required>
+      <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm Password" required>
+      <button type="submit" class="form-btn">Create Account</button>
+    </form>
+
+    <p class="form-footer">
+      Already have an account? <a href="login.html">Sign In</a>
+    </p>
+  </div>
+
+</body>
+</html>

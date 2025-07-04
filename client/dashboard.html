@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - JANAVAANI</title>
+    <link rel="stylesheet" href="styles/dashboard.css">
+    <script src="scripts/location-selector.js" defer></script>
+    <script src="scripts/dashboard.js" defer></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h2>JANAVAANI Dashboard</h2>
+        </div>
+        <div class="nav-user">
+            <span id="userName">Welcome, User</span>
+            <button onclick="logout()" class="logout-btn">Logout</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <div class="sidebar-menu">
+                <a href="#" class="menu-item active" onclick="showSection('overview')">
+                    <span>📊</span> Overview
+                </a>
+                <a href="#" class="menu-item" onclick="showSection('report-issue')">
+                    <span>📝</span> Report Issue
+                </a>
+                <a href="#" class="menu-item" onclick="showSection('my-issues')">
+                    <span>📋</span> My Issues
+                </a>
+                <a href="#" class="menu-item" onclick="showSection('browse-issues')">
+                    <span>🔍</span> Browse Issues
+                </a>
+                <a href="#" class="menu-item" onclick="showSection('profile')">
+                    <span>👤</span> Profile
+                </a>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Overview Section -->
+            <div id="overview" class="content-section active">
+                <h2>Welcome to JANAVAANI</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="totalIssues">0</h3>
+                        <p>Total Issues Reported</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="pendingIssues">0</h3>
+                        <p>Pending</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="resolvedIssues">0</h3>
+                        <p>Resolved</p>
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <button onclick="showSection('report-issue')" class="action-btn primary">
+                        📝 Report New Issue
+                    </button>
+                    <button onclick="showSection('my-issues')" class="action-btn">
+                        📋 View My Issues
+                    </button>
+                </div>
+            </div>
+
+            <!-- Report Issue Section -->
+            <div id="report-issue" class="content-section">
+                <h2>Report a New Issue</h2>
+                <form id="issueForm" class="issue-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="issueTitle">Issue Title *</label>
+                            <input type="text" id="issueTitle" name="title" required maxlength="200"
+                                   placeholder="Brief title describing the issue">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">Category *</label>
+                            <select id="category" name="category" required>
+                                <option value="">Select Category</option>
+                                <option value="water-supply">Water Supply</option>
+                                <option value="electricity">Electricity</option>
+                                <option value="roads-transport">Roads & Transport</option>
+                                <option value="sanitation-waste">Sanitation & Waste</option>
+                                <option value="drainage-sewage">Drainage & Sewage</option>
+                                <option value="street-lighting">Street Lighting</option>
+                                <option value="public-safety">Public Safety</option>
+                                <option value="healthcare">Healthcare</option>
+                                <option value="education">Education</option>
+                                <option value="parks-recreation">Parks & Recreation</option>
+                                <option value="noise-pollution">Noise Pollution</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="priority">Priority</label>
+                            <select id="priority" name="priority">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description *</label>
+                        <textarea id="description" name="description" required maxlength="2000" rows="5"
+                                  placeholder="Provide detailed description of the issue..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="state">State *</label>
+                            <select id="state" name="state" required>
+                                <option value="">Select State</option>
+                                <option value="Andhra Pradesh">Andhra Pradesh</option>
+                                <option value="Telangana">Telangana</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="district">District *</label>
+                            <select id="district" name="district" required disabled>
+                                <option value="">Select District</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="mandal">Mandal *</label>
+                            <select id="mandal" name="mandal" required disabled>
+                                <option value="">Select Mandal</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="village">Village *</label>
+                            <select id="village" name="village" required disabled>
+                                <option value="">Select Village</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="address">Detailed Address *</label>
+                            <input type="text" id="address" name="address" required
+                                   placeholder="House/Door number, Street name">
+                        </div>
+                        <div class="form-group">
+                            <label for="pincode">Pincode *</label>
+                            <input type="text" id="pincode" name="pincode" required pattern="[0-9]{6}"
+                                   placeholder="6-digit pincode">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="images">Upload Images (optional)</label>
+                        <input type="file" id="images" name="images" multiple accept="image/*"
+                               class="file-input">
+                        <div class="file-help">
+                            You can upload multiple images (JPG, PNG). Max 5MB per image.
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" onclick="resetForm()" class="btn-secondary">Reset</button>
+                        <button type="submit" class="btn-primary">Submit Issue</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- My Issues Section -->
+            <div id="my-issues" class="content-section">
+                <h2>My Reported Issues</h2>
+                <div class="issues-filter">
+                    <select id="statusFilter" onchange="filterIssues()">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="under-review">Under Review</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                    <select id="categoryFilter" onchange="filterIssues()">
+                        <option value="">All Categories</option>
+                        <option value="water-supply">Water Supply</option>
+                        <option value="electricity">Electricity</option>
+                        <option value="roads-transport">Roads & Transport</option>
+                        <option value="sanitation-waste">Sanitation & Waste</option>
+                        <option value="drainage-sewage">Drainage & Sewage</option>
+                        <option value="street-lighting">Street Lighting</option>
+                        <option value="public-safety">Public Safety</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="education">Education</option>
+                        <option value="parks-recreation">Parks & Recreation</option>
+                        <option value="noise-pollution">Noise Pollution</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div id="issuesList" class="issues-list">
+                    <!-- Issues will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Browse Issues Section -->
+            <div id="browse-issues" class="content-section">
+                <h2>🌍 Community Issues Hub</h2>
+                <p class="section-description">Discover, engage, and stay connected with issues in your community</p>
+                
+                <!-- Locality Selector -->
+                <div class="locality-selector">
+                    <h3>📍 Filter by Your Locality</h3>
+                    <div class="locality-row">
+                        <select id="localityState" onchange="updateLocalityFilters()">
+                            <option value="">Select State</option>
+                            <option value="Telangana">Telangana</option>
+                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                        </select>
+                        
+                        <select id="localityDistrict" onchange="updateLocalityFilters()">
+                            <option value="">Select District</option>
+                        </select>
+                        
+                        <select id="localityMandal" onchange="updateLocalityFilters()">
+                            <option value="">Select Mandal</option>
+                        </select>
+                        
+                        <select id="localityVillage" onchange="updateLocalityFilters()">
+                            <option value="">Select Village</option>
+                        </select>
+                        
+                        <button onclick="applyLocalityFilter()" class="locality-btn">🔍 Show My Area Issues</button>
+                        <button onclick="clearLocalityFilter()" class="locality-btn secondary">🌐 Show All Issues</button>
+                    </div>
+                </div>
+                
+                <!-- Quick Filters -->
+                <div class="quick-filters">
+                    <button onclick="showTrendingIssues()" class="quick-filter-btn trending">🔥 Trending</button>
+                    <button onclick="showPopularIssues()" class="quick-filter-btn popular">❤️ Most Liked</button>
+                    <button onclick="showRecentIssues()" class="quick-filter-btn recent">🆕 Recent</button>
+                    <button onclick="showUrgentIssues()" class="quick-filter-btn urgent">⚡ Urgent</button>
+                </div>
+                
+                <div class="browse-filters">
+                    <div class="filter-row">
+                        <select id="browseStatusFilter" onchange="filterBrowseIssues()">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                        
+                        <select id="browseCategoryFilter" onchange="filterBrowseIssues()">
+                            <option value="">All Categories</option>
+                            <option value="roads">Roads & Infrastructure</option>
+                            <option value="water">Water Supply</option>
+                            <option value="electricity">Electricity</option>
+                            <option value="sanitation">Sanitation</option>
+                            <option value="healthcare">Healthcare</option>
+                            <option value="education">Education</option>
+                            <option value="other">Other</option>
+                        </select>
+                        
+                        <select id="browsePriorityFilter" onchange="filterBrowseIssues()">
+                            <option value="">All Priorities</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                        
+                        <input type="text" id="browseSearchInput" placeholder="Search issues..." onkeyup="filterBrowseIssues()" />
+                    </div>
+                    
+                    <div class="filter-row">
+                        <select id="browseSortFilter" onchange="sortBrowseIssues()">
+                            <option value="newest">Newest First</option>
+                            <option value="trending">🔥 Trending</option>
+                            <option value="popular">❤️ Most Popular</option>
+                            <option value="mostLiked">👍 Most Liked</option>
+                            <option value="mostCommented">💬 Most Discussed</option>
+                            <option value="priority">⚡ High Priority First</option>
+                            <option value="oldest">Oldest First</option>
+                        </select>
+                        
+                        <button onclick="loadBrowseIssues()" class="refresh-btn">🔄 Refresh</button>
+                        <button onclick="clearAllFilters()" class="clear-btn">🗑️ Clear All</button>
+                    </div>
+                </div>
+                
+                <!-- Enhanced Statistics -->
+                <div class="browse-stats">
+                    <div class="stat-item">
+                        <span id="browseTotal">0</span> Total Issues
+                    </div>
+                    <div class="stat-item">
+                        <span id="browsePending">0</span> Pending
+                    </div>
+                    <div class="stat-item">
+                        <span id="browseInProgress">0</span> In Progress
+                    </div>
+                    <div class="stat-item">
+                        <span id="browseResolved">0</span> Resolved
+                    </div>
+                    <div class="stat-item social">
+                        <span id="browseTotalLikes">0</span> ❤️ Total Likes
+                    </div>
+                    <div class="stat-item social">
+                        <span id="browseTotalComments">0</span> 💬 Comments
+                    </div>
+                </div>
+                
+                <div id="browseIssuesList" class="browse-issues-list">
+                    <!-- Browse issues will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Profile Section -->
+            <div id="profile" class="content-section">
+                <h2>My Profile</h2>
+                <div id="profileInfo" class="profile-info">
+                    <!-- Profile info will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for issue details -->
+    <div id="issueModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="issueDetails">
+                <!-- Issue details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Processing...</p>
+    </div>
+</body>
+</html>
