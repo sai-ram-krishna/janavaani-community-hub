@@ -13,15 +13,15 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Routes MUST come before static file serving
+app.use('/api/auth', authRoutes);
+app.use('/api/issues', issueRoutes);
+
 // Serve static files from client directory
 app.use(express.static(path.join(__dirname, '../client')));
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/issues', issueRoutes);
 
 // Serve index.html for all other routes (SPA fallback), but NOT for API routes
 app.get('*', (req, res) => {
