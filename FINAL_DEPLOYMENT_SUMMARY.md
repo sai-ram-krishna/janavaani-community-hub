@@ -95,17 +95,19 @@ git push heroku main
 ## 🎯 Next Steps (Manual Actions Required)
 
 ### 1. Create GitHub Repository
-```bash
-# Go to https://github.com/new
+```
+Go to: https://github.com/sai-ram-krishna
+Click "New" or go to: https://github.com/new
 Repository name: janavaani-community-hub
 Description: JANAVAANI Community Issues Hub - Civic Issue Reporting System
-Public/Private: Your choice
+Public/Private: Your choice (recommend Public for portfolio)
+DO NOT initialize with README (we already have one)
 ```
 
 ### 2. Connect and Push to GitHub
-```bash
-# In your terminal
-git remote add origin https://github.com/YOUR_USERNAME/janavaani-community-hub.git
+```powershell
+# In your PowerShell terminal
+git remote add origin https://github.com/sai-ram-krishna/janavaani-community-hub.git
 git branch -M main
 git push -u origin main
 ```
