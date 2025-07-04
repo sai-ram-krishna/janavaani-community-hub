@@ -16,21 +16,39 @@ router.post("/create", async (req, res) => {
       submittedBy 
     } = req.body;
 
+    console.log('=== ISSUE CREATION DEBUG ===');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    console.log('submittedBy received:', submittedBy);
+    console.log('submittedBy.userId:', submittedBy.userId);
+    console.log('submittedBy.userId type:', typeof submittedBy.userId);
+
     // Validation
     if (!title || !description || !category || !location || !submittedBy) {
+      console.log('Missing required fields');
       return res.status(400).json({ 
         message: "All required fields must be provided." 
       });
     }
 
     if (!submittedBy.userId) {
+      console.log('Missing userId in submittedBy');
       return res.status(400).json({ 
         message: "User ID is required in submittedBy field." 
       });
     }
 
+    // Validate userId format (MongoDB ObjectId)
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(submittedBy.userId)) {
+      console.log('Invalid userId format:', submittedBy.userId);
+      return res.status(400).json({ 
+        message: "Invalid user ID format. Please login again." 
+      });
+    }
+
     if (!location.state || !location.district || !location.mandal || 
         !location.village || !location.address || !location.pincode) {
+      console.log('Incomplete location data');
       return res.status(400).json({ 
         message: "Complete location details (state, district, mandal, village, address, pincode) are required." 
       });
@@ -40,12 +58,14 @@ router.post("/create", async (req, res) => {
     console.log('Looking for user with ID:', submittedBy.userId);
     const user = await User.findById(submittedBy.userId);
     if (!user) {
-      console.log('User not found with ID:', submittedBy.userId);
+      console.log('User not found in database with ID:', submittedBy.userId);
+      console.log('Available users count:', await User.countDocuments());
       return res.status(400).json({ 
-        message: "Invalid user ID. Please login again." 
+        message: "User not found in database. Please register and login again." 
       });
     }
-    console.log('User found:', user.name);
+    console.log('User found:', user.name, user.email);
+    console.log('=== END DEBUG ===');
 
     const newIssue = new Issue({
       title,

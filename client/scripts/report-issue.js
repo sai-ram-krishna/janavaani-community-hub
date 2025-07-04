@@ -96,25 +96,48 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.textContent = 'Submitting...';
 
         try {
+            // Clear old data first to ensure clean state
+            console.log('=== DEBUGGING USER DATA ===');
+            
             // Get current user ID from localStorage
             let userId = null;
-            const userData = localStorage.getItem('janavaani_user');
-            if (userData) {
+            let userData = null;
+            const userDataString = localStorage.getItem('janavaani_user');
+            
+            console.log('Raw localStorage data:', userDataString);
+            
+            if (userDataString) {
                 try {
-                    const user = JSON.parse(userData);
-                    userId = user.id || user._id || user.userId;
-                    console.log('User data:', user);
+                    userData = JSON.parse(userDataString);
+                    console.log('Parsed user data:', userData);
+                    
+                    // Try multiple ways to get user ID
+                    userId = userData.id || userData._id || userData.userId;
                     console.log('Extracted userId:', userId);
+                    console.log('User data properties:', Object.keys(userData));
                 } catch (e) {
-                    console.log('Could not get user ID from stored data:', e);
+                    console.error('JSON parse error:', e);
+                    showAlert('error', 'Invalid user session. Please <a href="login.html">login again</a>.');
+                    return;
                 }
             }
 
-            // If no user ID, require login
-            if (!userId) {
+            // Comprehensive user ID validation
+            if (!userId || userId === 'null' || userId === 'undefined') {
+                console.log('No valid user ID found');
                 showAlert('error', 'Please <a href="login.html">login</a> first to report an issue.');
                 return;
             }
+
+            // Validate user ID format (MongoDB ObjectId is 24 hex characters)
+            if (typeof userId !== 'string' || !/^[0-9a-fA-F]{24}$/.test(userId)) {
+                console.log('Invalid user ID format:', userId);
+                showAlert('error', 'Invalid user session. Please <a href="login.html">login again</a>.');
+                return;
+            }
+
+            console.log('Using valid userId:', userId);
+            console.log('=== END DEBUG ===');
 
             const formData = {
                 title: document.getElementById('title').value.trim(),

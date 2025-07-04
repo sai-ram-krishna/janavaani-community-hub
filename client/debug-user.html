@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug User Session - JANAVAANI</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .debug-box { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin: 10px 0; border-radius: 4px; }
+        .error { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .success { background: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .warning { background: #fff3cd; border-color: #ffeaa7; color: #856404; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 JANAVAANI User Session Debug</h1>
+        
+        <div class="debug-box">
+            <h3>Current User Session Status</h3>
+            <div id="sessionStatus">Checking...</div>
+        </div>
+
+        <div class="debug-box">
+            <h3>localStorage Data</h3>
+            <div id="localStorageData">Loading...</div>
+        </div>
+
+        <div class="debug-box">
+            <h3>Actions</h3>
+            <button class="btn-primary" onclick="testLogin()">Go to Login</button>
+            <button class="btn-primary" onclick="testReportIssue()">Test Report Issue</button>
+            <button class="btn-danger" onclick="clearSession()">Clear Session</button>
+            <button class="btn-primary" onclick="refreshDebug()">Refresh Debug</button>
+        </div>
+
+        <div class="debug-box">
+            <h3>Test API Connection</h3>
+            <button class="btn-primary" onclick="testAPI()">Test API</button>
+            <div id="apiResult"></div>
+        </div>
+    </div>
+
+    <script>
+        function debugUserSession() {
+            const statusDiv = document.getElementById('sessionStatus');
+            const dataDiv = document.getElementById('localStorageData');
+            
+            // Check localStorage
+            const userDataString = localStorage.getItem('janavaani_user');
+            const tokenString = localStorage.getItem('janavaani_token');
+            
+            let html = '<h4>Raw Data:</h4>';
+            html += `<p><strong>janavaani_user:</strong> ${userDataString || 'Not set'}</p>`;
+            html += `<p><strong>janavaani_token:</strong> ${tokenString || 'Not set'}</p>`;
+            
+            if (userDataString) {
+                try {
+                    const userData = JSON.parse(userDataString);
+                    html += '<h4>Parsed User Data:</h4>';
+                    html += `<pre>${JSON.stringify(userData, null, 2)}</pre>`;
+                    
+                    const userId = userData.id || userData._id || userData.userId;
+                    
+                    if (userId) {
+                        statusDiv.innerHTML = `<div class="success">✅ User logged in: ${userData.name} (${userData.email})</div>`;
+                        statusDiv.innerHTML += `<div class="success">✅ User ID: ${userId}</div>`;
+                        statusDiv.innerHTML += `<div class="success">✅ User Type: ${userData.userType}</div>`;
+                        
+                        // Validate ID format
+                        if (/^[0-9a-fA-F]{24}$/.test(userId)) {
+                            statusDiv.innerHTML += `<div class="success">✅ Valid MongoDB ObjectId format</div>`;
+                        } else {
+                            statusDiv.innerHTML += `<div class="error">❌ Invalid MongoDB ObjectId format</div>`;
+                        }
+                    } else {
+                        statusDiv.innerHTML = `<div class="error">❌ User data exists but no valid ID found</div>`;
+                    }
+                } catch (e) {
+                    statusDiv.innerHTML = `<div class="error">❌ Invalid JSON in localStorage: ${e.message}</div>`;
+                }
+            } else {
+                statusDiv.innerHTML = `<div class="warning">⚠️ No user session found</div>`;
+            }
+            
+            dataDiv.innerHTML = html;
+        }
+
+        function clearSession() {
+            localStorage.removeItem('janavaani_user');
+            localStorage.removeItem('janavaani_token');
+            alert('Session cleared!');
+            debugUserSession();
+        }
+
+        function testLogin() {
+            window.location.href = 'login.html';
+        }
+
+        function testReportIssue() {
+            window.location.href = 'report-issue.html';
+        }
+
+        function refreshDebug() {
+            debugUserSession();
+        }
+
+        async function testAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                const response = await fetch('/api/users/count');
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `<div class="success">✅ API Connected! Users in database: ${data.count || 'Unknown'}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ API Error: ${response.status}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Connection Error: ${error.message}</div>`;
+            }
+        }
+
+        // Run debug on page load
+        document.addEventListener('DOMContentLoaded', debugUserSession);
+    </script>
+</body>
+</html>

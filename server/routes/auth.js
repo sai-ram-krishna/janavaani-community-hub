@@ -109,4 +109,14 @@ router.get("/admin/users", async (req, res) => {
   }
 });
 
+// Debug endpoint to count users
+router.get("/users/count", async (req, res) => {
+  try {
+    const count = await User.countDocuments();
+    res.json({ count, message: "User count retrieved successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Error counting users", error: err.message });
+  }
+});
+
 module.exports = router;
