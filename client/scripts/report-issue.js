@@ -96,18 +96,21 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.textContent = 'Submitting...';
 
         try {
-            // Get current user ID (you might need to implement proper user session)
+            // Get current user ID from localStorage
             let userId = null;
             const userData = localStorage.getItem('janavaani_user');
             if (userData) {
                 try {
-                    userId = JSON.parse(userData).id;
+                    const user = JSON.parse(userData);
+                    userId = user.id || user._id || user.userId;
+                    console.log('User data:', user);
+                    console.log('Extracted userId:', userId);
                 } catch (e) {
-                    console.log('Could not get user ID from stored data');
+                    console.log('Could not get user ID from stored data:', e);
                 }
             }
 
-            // If no user ID, create a guest submission (you might want to require login instead)
+            // If no user ID, require login
             if (!userId) {
                 showAlert('error', 'Please <a href="login.html">login</a> first to report an issue.');
                 return;

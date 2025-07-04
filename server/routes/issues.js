@@ -23,6 +23,12 @@ router.post("/create", async (req, res) => {
       });
     }
 
+    if (!submittedBy.userId) {
+      return res.status(400).json({ 
+        message: "User ID is required in submittedBy field." 
+      });
+    }
+
     if (!location.state || !location.district || !location.mandal || 
         !location.village || !location.address || !location.pincode) {
       return res.status(400).json({ 
@@ -31,12 +37,15 @@ router.post("/create", async (req, res) => {
     }
 
     // Verify user exists
+    console.log('Looking for user with ID:', submittedBy.userId);
     const user = await User.findById(submittedBy.userId);
     if (!user) {
+      console.log('User not found with ID:', submittedBy.userId);
       return res.status(400).json({ 
-        message: "Invalid user ID." 
+        message: "Invalid user ID. Please login again." 
       });
     }
+    console.log('User found:', user.name);
 
     const newIssue = new Issue({
       title,
