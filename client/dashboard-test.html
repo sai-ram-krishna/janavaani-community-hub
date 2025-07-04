@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Test - JANAVAANI</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button { margin: 5px; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #results { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px; }
+        pre { background: #fff; padding: 10px; border: 1px solid #ddd; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>JANAVAANI Dashboard Testing</h1>
+    
+    <div class="test-section">
+        <h2>Server Status</h2>
+        <button onclick="testServerHealth()">Test Server Connection</button>
+        <button onclick="testAPIHealth()">Test API Health</button>
+        <div id="server-status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Authentication Test</h2>
+        <button onclick="createTestUser()">Create Test User</button>
+        <button onclick="loginTestUser()">Login Test User</button>
+        <button onclick="checkAuthStatus()">Check Auth Status</button>
+        <div id="auth-status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Dashboard Access</h2>
+        <button onclick="openDashboard()">Open Dashboard</button>
+        <button onclick="testDashboardFunctions()">Test Dashboard Functions</button>
+        <div id="dashboard-status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Issue Management</h2>
+        <button onclick="createTestIssue()">Create Test Issue</button>
+        <button onclick="fetchIssues()">Fetch All Issues</button>
+        <button onclick="testSocialFeatures()">Test Social Features</button>
+        <div id="issue-status"></div>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let testUser = null;
+
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            results.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function testServerHealth() {
+            try {
+                const response = await fetch('http://localhost:5000');
+                if (response.ok) {
+                    log('✅ Server is running and accessible', 'success');
+                    document.getElementById('server-status').innerHTML = '<span class="success">Server: Online</span>';
+                } else {
+                    log('❌ Server responded with error: ' + response.status, 'error');
+                }
+            } catch (error) {
+                log('❌ Server connection failed: ' + error.message, 'error');
+                document.getElementById('server-status').innerHTML = '<span class="error">Server: Offline</span>';
+            }
+        }
+
+        async function testAPIHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/issues`);
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ API is working. Found ' + data.issues.length + ' issues', 'success');
+                } else {
+                    log('❌ API error: ' + response.status, 'error');
+                }
+            } catch (error) {
+                log('❌ API connection failed: ' + error.message, 'error');
+            }
+        }
+
+        async function createTestUser() {
+            const userData = {
+                name: 'Test User',
+                email: 'test@example.com',
+                password: 'password123',
+                userType: 'citizen',
+                phoneNumber: '9876543210'
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    log('✅ Test user created successfully', 'success');
+                    testUser = data.user;
+                } else {
+                    log('ℹ️ User might already exist: ' + data.message, 'info');
+                }
+            } catch (error) {
+                log('❌ Error creating test user: ' + error.message, 'error');
+            }
+        }
+
+        async function loginTestUser() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'password123'
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    log('✅ Test user logged in successfully', 'success');
+                    testUser = data.user;
+                    localStorage.setItem('janavaani_user', JSON.stringify(data.user));
+                    document.getElementById('auth-status').innerHTML = '<span class="success">Auth: Logged In</span>';
+                } else {
+                    log('❌ Login failed: ' + data.message, 'error');
+                }
+            } catch (error) {
+                log('❌ Login error: ' + error.message, 'error');
+            }
+        }
+
+        function checkAuthStatus() {
+            const userData = localStorage.getItem('janavaani_user');
+            if (userData) {
+                const user = JSON.parse(userData);
+                log('✅ User authenticated: ' + user.name, 'success');
+                document.getElementById('auth-status').innerHTML = '<span class="success">Auth: ' + user.name + '</span>';
+            } else {
+                log('❌ No user authentication found', 'error');
+                document.getElementById('auth-status').innerHTML = '<span class="error">Auth: Not Logged In</span>';
+            }
+        }
+
+        function openDashboard() {
+            const userData = localStorage.getItem('janavaani_user');
+            if (userData) {
+                window.open('dashboard.html', '_blank');
+                log('✅ Opening dashboard in new tab', 'success');
+            } else {
+                log('❌ Please login first before accessing dashboard', 'error');
+            }
+        }
+
+        async function createTestIssue() {
+            if (!testUser) {
+                log('❌ Please login first', 'error');
+                return;
+            }
+
+            const issueData = {
+                title: 'Test Issue - Road Repair Needed',
+                description: 'This is a test issue for dashboard functionality testing.',
+                category: 'Infrastructure',
+                location: {
+                    state: 'Andhra Pradesh',
+                    district: 'Guntur',
+                    mandal: 'Tenali',
+                    village: 'Kollipara',
+                    address: 'Main Road, Near Bus Stop'
+                },
+                priority: 'medium',
+                userId: testUser.id
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/issues`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(issueData)
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    log('✅ Test issue created successfully', 'success');
+                    log('Issue ID: ' + data.issue._id, 'info');
+                } else {
+                    log('❌ Error creating issue: ' + data.message, 'error');
+                }
+            } catch (error) {
+                log('❌ Error creating test issue: ' + error.message, 'error');
+            }
+        }
+
+        async function fetchIssues() {
+            try {
+                const response = await fetch(`${API_BASE}/issues`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('✅ Fetched ' + data.issues.length + ' issues', 'success');
+                    if (data.issues.length > 0) {
+                        log('Sample issue: ' + data.issues[0].title, 'info');
+                    }
+                } else {
+                    log('❌ Error fetching issues: ' + data.message, 'error');
+                }
+            } catch (error) {
+                log('❌ Error fetching issues: ' + error.message, 'error');
+            }
+        }
+
+        async function testSocialFeatures() {
+            try {
+                // First, get issues to test social features on
+                const issuesResponse = await fetch(`${API_BASE}/issues`);
+                const issuesData = await issuesResponse.json();
+                
+                if (issuesData.issues && issuesData.issues.length > 0) {
+                    const testIssueId = issuesData.issues[0]._id;
+                    
+                    // Test like functionality
+                    const likeResponse = await fetch(`${API_BASE}/issues/${testIssueId}/like`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: testUser?.id || 'test-user' })
+                    });
+                    
+                    if (likeResponse.ok) {
+                        log('✅ Social features (like) working', 'success');
+                    } else {
+                        log('❌ Social features test failed', 'error');
+                    }
+                } else {
+                    log('❌ No issues found to test social features', 'error');
+                }
+            } catch (error) {
+                log('❌ Error testing social features: ' + error.message, 'error');
+            }
+        }
+
+        function testDashboardFunctions() {
+            // Test if dashboard functions exist
+            const functionTests = [
+                'showSection', 'loadUserData', 'handleIssueSubmission', 
+                'loadBrowseIssues', 'likeIssue', 'voteIssue'
+            ];
+            
+            log('Testing dashboard function availability...', 'info');
+            
+            // This test would need to be run in the dashboard context
+            // For now, just indicate the test
+            log('ℹ️ Dashboard function tests should be run in dashboard.html context', 'info');
+        }
+
+        // Auto-run basic tests on load
+        window.onload = function() {
+            log('🚀 Starting JANAVAANI Dashboard Tests...', 'info');
+            testServerHealth();
+            checkAuthStatus();
+        };
+    </script>
+</body>
+</html>

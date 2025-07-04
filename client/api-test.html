@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - JANAVAANI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #5a67d8;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 API Test Page</h1>
+        <p>Use this page to test if your JANAVAANI API endpoints are working correctly.</p>
+        
+        <div>
+            <button onclick="testUsersAPI()">Test /api/auth/admin/users</button>
+            <button onclick="testServerStatus()">Test Server Status</button>
+            <button onclick="clearResults()">Clear Results</button>
+        </div>
+        
+        <div id="results"></div>
+        
+        <div style="margin-top: 30px;">
+            <h3>Expected Results:</h3>
+            <ul>
+                <li><strong>/api/auth/admin/users</strong> - Should return JSON with users array</li>
+                <li><strong>Server Status</strong> - Should return HTML (means server is running)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function addResult(title, content, isError = false) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${isError ? 'error' : 'success'}`;
+            resultDiv.innerHTML = `<strong>${title}</strong>\n${content}`;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        async function testUsersAPI() {
+            try {
+                console.log('Testing /api/auth/admin/users...');
+                const response = await fetch('/api/auth/admin/users');
+                
+                const statusText = `Status: ${response.status} ${response.statusText}`;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult(
+                        '✅ /api/auth/admin/users - SUCCESS', 
+                        `${statusText}\n\nResponse:\n${JSON.stringify(data, null, 2)}`
+                    );
+                } else {
+                    const errorText = await response.text();
+                    addResult(
+                        '❌ /api/auth/admin/users - ERROR', 
+                        `${statusText}\n\nError:\n${errorText}`,
+                        true
+                    );
+                }
+            } catch (error) {
+                addResult(
+                    '❌ /api/auth/admin/users - NETWORK ERROR', 
+                    `Error: ${error.message}\n\nThis usually means:\n- Server is not running\n- Server is running on different port\n- CORS issue`,
+                    true
+                );
+            }
+        }
+
+        async function testServerStatus() {
+            try {
+                console.log('Testing server status...');
+                const response = await fetch('/');
+                
+                if (response.ok) {
+                    addResult('✅ Server Status - RUNNING', `Status: ${response.status} ${response.statusText}\nServer is accessible!`);
+                } else {
+                    addResult('⚠️ Server Status - ISSUES', `Status: ${response.status} ${response.statusText}`, true);
+                }
+            } catch (error) {
+                addResult(
+                    '❌ Server Status - NOT ACCESSIBLE', 
+                    `Error: ${error.message}\n\nServer appears to be down or not running on port 5000.`,
+                    true
+                );
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // Auto-test on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            addResult('🔍 Page Loaded', 'API test page ready. Click buttons above to test endpoints.');
+        });
+    </script>
+</body>
+</html>

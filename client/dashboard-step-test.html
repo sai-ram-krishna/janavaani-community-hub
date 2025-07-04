@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Step-by-Step Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .step { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .pending { background: #fff3cd; border-color: #ffeeba; }
+        button { margin: 5px; padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .console-output { background: #f8f9fa; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>JANAVAANI Dashboard Step-by-Step Test</h1>
+    
+    <div class="step pending" id="step1">
+        <h3>Step 1: Create and Login Test User</h3>
+        <button onclick="createTestUser()">Create Test User</button>
+        <button onclick="loginTestUser()">Login Test User</button>
+        <div id="step1-result"></div>
+    </div>
+
+    <div class="step pending" id="step2">
+        <h3>Step 2: Test API Connectivity</h3>
+        <button onclick="testAPI()">Test API</button>
+        <div id="step2-result"></div>
+    </div>
+
+    <div class="step pending" id="step3">
+        <h3>Step 3: Test Dashboard Access</h3>
+        <button onclick="testDashboardAccess()">Test Dashboard JavaScript Loading</button>
+        <div id="step3-result"></div>
+    </div>
+
+    <div class="step pending" id="step4">
+        <h3>Step 4: Test Issue Reporting</h3>
+        <button onclick="testIssueReporting()">Test Issue Creation</button>
+        <div id="step4-result"></div>
+    </div>
+
+    <div class="step pending" id="step5">
+        <h3>Step 5: Test Issue Browsing</h3>
+        <button onclick="testIssueBrowsing()">Test Issue Fetching</button>
+        <div id="step5-result"></div>
+    </div>
+
+    <div class="step" id="console-logs">
+        <h3>Console Output</h3>
+        <div id="console-output" class="console-output"></div>
+        <button onclick="clearConsole()">Clear Console</button>
+        <button onclick="openDashboardInNewTab()">Open Dashboard in New Tab</button>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let testUserId = null;
+
+        function updateStep(stepId, status, message) {
+            const step = document.getElementById(stepId);
+            const result = document.getElementById(stepId + '-result');
+            
+            step.className = `step ${status}`;
+            result.innerHTML = message;
+            
+            logToConsole(`${stepId}: ${status.toUpperCase()} - ${message}`);
+        }
+
+        function logToConsole(message) {
+            const console = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString();
+            console.innerHTML += `[${timestamp}] ${message}\n`;
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function clearConsole() {
+            document.getElementById('console-output').innerHTML = '';
+        }
+
+        // Step 1: Create and login test user
+        async function createTestUser() {
+            try {
+                const userData = {
+                    name: 'Test User',
+                    email: 'test@example.com',
+                    password: 'password123',
+                    phone: '9876543210',
+                    userType: 'citizen'
+                };
+
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    updateStep('step1', 'success', 'Test user created successfully');
+                    testUserId = data.user.id;
+                } else {
+                    updateStep('step1', 'error', 'User creation failed: ' + data.message);
+                }
+            } catch (error) {
+                updateStep('step1', 'error', 'Error creating user: ' + error.message);
+            }
+        }
+
+        async function loginTestUser() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'password123'
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('janavaani_user', JSON.stringify(data.user));
+                    updateStep('step1', 'success', 'Login successful! User data stored in localStorage');
+                    testUserId = data.user.id;
+                } else {
+                    updateStep('step1', 'error', 'Login failed: ' + data.message);
+                }
+            } catch (error) {
+                updateStep('step1', 'error', 'Login error: ' + error.message);
+            }
+        }
+
+        // Step 2: Test API
+        async function testAPI() {
+            try {
+                const response = await fetch(`${API_BASE}/issues`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStep('step2', 'success', `API working! Found ${data.issues.length} issues`);
+                } else {
+                    updateStep('step2', 'error', 'API error: ' + response.status);
+                }
+            } catch (error) {
+                updateStep('step2', 'error', 'API connection failed: ' + error.message);
+            }
+        }
+
+        // Step 3: Test dashboard access
+        function testDashboardAccess() {
+            // Check if we can load the dashboard script
+            const script = document.createElement('script');
+            script.src = 'scripts/dashboard.js';
+            script.onload = function() {
+                updateStep('step3', 'success', 'Dashboard JavaScript loaded successfully');
+                
+                // Test if key functions are available
+                setTimeout(() => {
+                    const functions = ['showSection', 'handleIssueSubmission', 'loadBrowseIssues', 'getApiBaseUrl'];
+                    const missing = functions.filter(func => typeof window[func] !== 'function');
+                    
+                    if (missing.length === 0) {
+                        updateStep('step3', 'success', 'All dashboard functions are available');
+                    } else {
+                        updateStep('step3', 'error', 'Missing functions: ' + missing.join(', '));
+                    }
+                }, 500);
+            };
+            script.onerror = function() {
+                updateStep('step3', 'error', 'Failed to load dashboard JavaScript');
+            };
+            document.head.appendChild(script);
+        }
+
+        // Step 4: Test issue reporting
+        async function testIssueReporting() {
+            if (!testUserId) {
+                updateStep('step4', 'error', 'Please complete login first');
+                return;
+            }
+
+            try {
+                const issueData = {
+                    title: 'Test Issue - Road Repair',
+                    description: 'This is a test issue created by the step-by-step test',
+                    category: 'roads',
+                    priority: 'medium',
+                    location: {
+                        state: 'Andhra Pradesh',
+                        district: 'Guntur',
+                        mandal: 'Tenali',
+                        village: 'Kollipara',
+                        address: 'Main Road',
+                        pincode: '522201'
+                    },
+                    userId: testUserId
+                };
+
+                const response = await fetch(`${API_BASE}/issues`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(issueData)
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    updateStep('step4', 'success', 'Issue created successfully! ID: ' + data.issue._id);
+                } else {
+                    updateStep('step4', 'error', 'Issue creation failed: ' + data.message);
+                }
+            } catch (error) {
+                updateStep('step4', 'error', 'Error creating issue: ' + error.message);
+            }
+        }
+
+        // Step 5: Test issue browsing
+        async function testIssueBrowsing() {
+            try {
+                const response = await fetch(`${API_BASE}/issues`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const issues = data.issues;
+                    
+                    if (issues.length > 0) {
+                        updateStep('step5', 'success', `Found ${issues.length} issues. Sample: "${issues[0].title}"`);
+                        
+                        // Test social features on first issue - only if we have a valid user ID
+                        if (testUserId && testUserId.length === 24) {
+                            const firstIssue = issues[0];
+                            logToConsole(`Testing social features on issue: ${firstIssue._id}`);
+                            
+                            // Test like
+                            const likeResponse = await fetch(`${API_BASE}/issues/${firstIssue._id}/like`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ 
+                                    userId: testUserId,
+                                    userName: 'Test User'
+                                })
+                            });
+                            
+                            if (likeResponse.ok) {
+                                logToConsole('✅ Like functionality working');
+                            } else {
+                                const errorData = await likeResponse.json();
+                                logToConsole('❌ Like functionality failed: ' + errorData.message);
+                            }
+                        } else {
+                            logToConsole('⚠️ Skipping social features test - need valid ObjectId user');
+                        }
+                        
+                    } else {
+                        updateStep('step5', 'error', 'No issues found for browsing');
+                    }
+                } else {
+                    updateStep('step5', 'error', 'Failed to fetch issues: ' + response.status);
+                }
+            } catch (error) {
+                updateStep('step5', 'error', 'Error fetching issues: ' + error.message);
+            }
+        }
+
+        function openDashboardInNewTab() {
+            const userData = localStorage.getItem('janavaani_user');
+            if (userData) {
+                window.open('dashboard.html', '_blank');
+                logToConsole('Opening dashboard in new tab...');
+            } else {
+                logToConsole('Please login first before opening dashboard');
+            }
+        }
+
+        // Auto-start basic tests
+        window.onload = function() {
+            logToConsole('🚀 Dashboard Testing Suite Started');
+            
+            // Check if user is already logged in
+            const userData = localStorage.getItem('janavaani_user');
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    testUserId = user.id;
+                    updateStep('step1', 'success', 'User already logged in: ' + user.name);
+                } catch (e) {
+                    logToConsole('Error parsing existing user data');
+                }
+            }
+        };
+    </script>
+</body>
+</html>

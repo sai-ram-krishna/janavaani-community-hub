@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Features Test - JANAVAANI</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { margin: 5px; padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .social-btn { background: #6c757d; }
+        .social-btn.liked { background: #dc3545; }
+        .social-btn.upvoted { background: #28a745; }
+        .social-btn.downvoted { background: #ffc107; }
+        pre { background: #f8f9fa; padding: 10px; border: 1px solid #ddd; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+        .issue-card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        .social-actions { display: flex; gap: 10px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Social Features Test</h1>
+    
+    <div class="test-section">
+        <h3>Setup</h3>
+        <button onclick="setupTestUser()">Setup Test User</button>
+        <button onclick="createTestIssue()">Create Test Issue</button>
+        <div id="setup-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>API Tests</h3>
+        <button onclick="testLikeAPI()">Test Like API</button>
+        <button onclick="testVoteAPI()">Test Vote API</button>
+        <button onclick="testCommentAPI()">Test Comment API</button>
+        <button onclick="testShareAPI()">Test Share API</button>
+        <div id="api-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Live Issue with Social Features</h3>
+        <div id="live-issue-container"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Dashboard Functions Test</h3>
+        <button onclick="testDashboardFunctions()">Load Dashboard Functions</button>
+        <button onclick="testSocialButtons()">Test Social Button Clicks</button>
+        <div id="dashboard-results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let testUser = null;
+        let testIssueId = null;
+        
+        function logResult(container, message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            document.getElementById(container).appendChild(div);
+        }
+
+        async function setupTestUser() {
+            try {
+                // First try to login
+                const loginResponse = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'password123'
+                    })
+                });
+
+                if (loginResponse.ok) {
+                    const data = await loginResponse.json();
+                    testUser = data.user;
+                    localStorage.setItem('janavaani_user', JSON.stringify(testUser));
+                    logResult('setup-results', `✅ User logged in: ${testUser.name}`, 'success');
+                } else {
+                    // If login fails, try to register
+                    const registerResponse = await fetch(`${API_BASE}/auth/register`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: 'Test User',
+                            email: 'test@example.com',
+                            password: 'password123',
+                            phoneNumber: '9876543210',
+                            userType: 'citizen'
+                        })
+                    });
+
+                    if (registerResponse.ok) {
+                        const data = await registerResponse.json();
+                        testUser = data.user;
+                        localStorage.setItem('janavaani_user', JSON.stringify(testUser));
+                        logResult('setup-results', `✅ User registered: ${testUser.name}`, 'success');
+                    } else {
+                        logResult('setup-results', '❌ Failed to setup user', 'error');
+                    }
+                }
+            } catch (error) {
+                logResult('setup-results', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function createTestIssue() {
+            if (!testUser) {
+                logResult('setup-results', '❌ Please setup user first', 'error');
+                return;
+            }
+
+            try {
+                const issueData = {
+                    title: 'Test Issue for Social Features',
+                    description: 'This is a test issue to check social features like like, vote, comment, share',
+                    category: 'Infrastructure',
+                    priority: 'medium',
+                    location: {
+                        state: 'Andhra Pradesh',
+                        district: 'Guntur',
+                        mandal: 'Tenali',
+                        village: 'Kollipara',
+                        address: 'Main Road',
+                        pincode: '522201'
+                    },
+                    submittedBy: {
+                        userId: testUser.id,
+                        name: testUser.name,
+                        email: testUser.email,
+                        phone: testUser.phoneNumber || '9876543210'
+                    }
+                };
+
+                const response = await fetch(`${API_BASE}/issues`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(issueData)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    testIssueId = data.issue._id;
+                    logResult('setup-results', `✅ Test issue created: ${testIssueId}`, 'success');
+                    loadLiveIssue();
+                } else {
+                    const errorData = await response.json();
+                    logResult('setup-results', `❌ Failed to create issue: ${errorData.message}`, 'error');
+                }
+            } catch (error) {
+                logResult('setup-results', `❌ Error creating issue: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLikeAPI() {
+            if (!testIssueId || !testUser) {
+                logResult('api-results', '❌ Need test issue and user first', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/issues/${testIssueId}/like`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: testUser.id,
+                        userName: testUser.name
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    logResult('api-results', `✅ Like API works: ${data.message} (Count: ${data.likeCount})`, 'success');
+                } else {
+                    const errorData = await response.json();
+                    logResult('api-results', `❌ Like API failed: ${errorData.message}`, 'error');
+                }
+            } catch (error) {
+                logResult('api-results', `❌ Like API error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testVoteAPI() {
+            if (!testIssueId || !testUser) {
+                logResult('api-results', '❌ Need test issue and user first', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/issues/${testIssueId}/vote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: testUser.id,
+                        userName: testUser.name,
+                        voteType: 'upvote'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    logResult('api-results', `✅ Vote API works: ${data.message}`, 'success');
+                } else {
+                    const errorData = await response.json();
+                    logResult('api-results', `❌ Vote API failed: ${errorData.message}`, 'error');
+                }
+            } catch (error) {
+                logResult('api-results', `❌ Vote API error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCommentAPI() {
+            if (!testIssueId || !testUser) {
+                logResult('api-results', '❌ Need test issue and user first', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/issues/${testIssueId}/comment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: testUser.id,
+                        userName: testUser.name,
+                        text: 'This is a test comment from the social features test'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    logResult('api-results', `✅ Comment API works: ${data.message}`, 'success');
+                } else {
+                    const errorData = await response.json();
+                    logResult('api-results', `❌ Comment API failed: ${errorData.message}`, 'error');
+                }
+            } catch (error) {
+                logResult('api-results', `❌ Comment API error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testShareAPI() {
+            if (!testIssueId || !testUser) {
+                logResult('api-results', '❌ Need test issue and user first', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/issues/${testIssueId}/share`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: testUser.id,
+                        userName: testUser.name,
+                        platform: 'internal'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    logResult('api-results', `✅ Share API works: ${data.message}`, 'success');
+                } else {
+                    const errorData = await response.json();
+                    logResult('api-results', `❌ Share API failed: ${errorData.message}`, 'error');
+                }
+            } catch (error) {
+                logResult('api-results', `❌ Share API error: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadLiveIssue() {
+            if (!testIssueId) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/issues`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const issue = data.issues.find(i => i._id === testIssueId);
+                    if (issue) {
+                        displayLiveIssue(issue);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading live issue:', error);
+            }
+        }
+
+        function displayLiveIssue(issue) {
+            const container = document.getElementById('live-issue-container');
+            container.innerHTML = `
+                <div class="issue-card">
+                    <h4>${issue.title}</h4>
+                    <p>${issue.description}</p>
+                    <div class="social-actions">
+                        <button class="social-btn" onclick="testLikeClick('${issue._id}', this)">
+                            ❤️ <span class="like-count">${issue.socialStats?.likes || 0}</span>
+                        </button>
+                        <button class="social-btn" onclick="testVoteClick('${issue._id}', 'upvote', this)">
+                            👍 <span class="vote-count">${issue.socialStats?.upvotes || 0}</span>
+                        </button>
+                        <button class="social-btn" onclick="testVoteClick('${issue._id}', 'downvote', this)">
+                            👎 <span class="vote-count">${issue.socialStats?.downvotes || 0}</span>
+                        </button>
+                        <button class="social-btn" onclick="testCommentClick('${issue._id}')">
+                            💬 <span class="comment-count">${issue.socialStats?.comments || 0}</span>
+                        </button>
+                        <button class="social-btn" onclick="testShareClick('${issue._id}')">
+                            📤 <span class="share-count">${issue.socialStats?.shares || 0}</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function testLikeClick(issueId, button) {
+            if (!testUser) {
+                alert('Please setup user first');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/issues/${issueId}/like`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: testUser.id,
+                        userName: testUser.name
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    button.classList.toggle('liked', data.liked);
+                    button.querySelector('.like-count').textContent = data.likeCount;
+                    logResult('dashboard-results', `✅ Like button works: ${data.liked ? 'Liked' : 'Unliked'}`, 'success');
+                } else {
+                    logResult('dashboard-results', '❌ Like button failed', 'error');
+                }
+            } catch (error) {
+                logResult('dashboard-results', `❌ Like error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testVoteClick(issueId, voteType, button) {
+            if (!testUser) {
+                alert('Please setup user first');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/issues/${issueId}/vote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: testUser.id,
+                        userName: testUser.name,
+                        voteType: voteType
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    button.classList.toggle(voteType + 'd', data.currentVote === voteType);
+                    logResult('dashboard-results', `✅ Vote button works: ${voteType}`, 'success');
+                    // Refresh the issue to get updated counts
+                    loadLiveIssue();
+                } else {
+                    logResult('dashboard-results', '❌ Vote button failed', 'error');
+                }
+            } catch (error) {
+                logResult('dashboard-results', `❌ Vote error: ${error.message}`, 'error');
+            }
+        }
+
+        function testCommentClick(issueId) {
+            const comment = prompt('Enter a test comment:');
+            if (comment) {
+                testCommentAdd(issueId, comment);
+            }
+        }
+
+        async function testCommentAdd(issueId, text) {
+            if (!testUser) {
+                alert('Please setup user first');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/issues/${issueId}/comment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: testUser.id,
+                        userName: testUser.name,
+                        text: text
+                    })
+                });
+
+                if (response.ok) {
+                    logResult('dashboard-results', '✅ Comment added successfully', 'success');
+                    loadLiveIssue();
+                } else {
+                    logResult('dashboard-results', '❌ Comment failed', 'error');
+                }
+            } catch (error) {
+                logResult('dashboard-results', `❌ Comment error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testShareClick(issueId) {
+            if (!testUser) {
+                alert('Please setup user first');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/issues/${issueId}/share`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: testUser.id,
+                        userName: testUser.name,
+                        platform: 'internal'
+                    })
+                });
+
+                if (response.ok) {
+                    logResult('dashboard-results', '✅ Share worked', 'success');
+                    loadLiveIssue();
+                } else {
+                    logResult('dashboard-results', '❌ Share failed', 'error');
+                }
+            } catch (error) {
+                logResult('dashboard-results', `❌ Share error: ${error.message}`, 'error');
+            }
+        }
+
+        function testDashboardFunctions() {
+            const script = document.createElement('script');
+            script.src = 'scripts/dashboard.js';
+            script.onload = function() {
+                logResult('dashboard-results', '✅ Dashboard script loaded', 'success');
+                
+                // Test if functions exist
+                const functions = ['likeIssue', 'voteOnIssue', 'showComments', 'shareIssue'];
+                functions.forEach(func => {
+                    if (typeof window[func] === 'function') {
+                        logResult('dashboard-results', `✅ Function exists: ${func}`, 'success');
+                    } else {
+                        logResult('dashboard-results', `❌ Function missing: ${func}`, 'error');
+                    }
+                });
+            };
+            script.onerror = function() {
+                logResult('dashboard-results', '❌ Failed to load dashboard script', 'error');
+            };
+            document.head.appendChild(script);
+        }
+
+        // Auto-setup on load
+        window.onload = function() {
+            const userData = localStorage.getItem('janavaani_user');
+            if (userData) {
+                testUser = JSON.parse(userData);
+                logResult('setup-results', `ℹ️ Found existing user: ${testUser.name}`, 'info');
+            }
+        };
+    </script>
+</body>
+</html>

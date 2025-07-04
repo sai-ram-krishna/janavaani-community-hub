@@ -119,4 +119,57 @@ router.get("/users/count", async (req, res) => {
   }
 });
 
+// Debug endpoint to verify user exists
+router.get("/users/verify/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log('Verifying user ID:', userId);
+    
+    const user = await User.findById(userId);
+    if (user) {
+      res.json({ 
+        exists: true, 
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          userType: user.userType
+        },
+        message: "User found successfully" 
+      });
+    } else {
+      res.json({ 
+        exists: false, 
+        message: "User not found in database",
+        totalUsers: await User.countDocuments()
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ 
+      exists: false, 
+      message: "Error verifying user", 
+      error: err.message 
+    });
+  }
+});
+
+// Debug endpoint to list recent users
+router.get("/users/recent", async (req, res) => {
+  try {
+    const users = await User.find({}).sort({ createdAt: -1 }).limit(5).select('_id name email userType createdAt');
+    res.json({ 
+      users: users.map(user => ({
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        userType: user.userType,
+        createdAt: user.createdAt
+      })),
+      total: await User.countDocuments()
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching users", error: err.message });
+  }
+});
+
 module.exports = router;

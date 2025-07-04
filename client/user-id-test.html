@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User ID Format Test - JANAVAANI</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { margin: 5px; padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border: 1px solid #ddd; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>User ID Format and Social Features Fix</h1>
+    
+    <div class="test-result info">
+        <strong>Issue Identified:</strong> Social features are failing because user IDs must be valid MongoDB ObjectIds (24 character hex strings), but test users have simple string IDs.
+    </div>
+
+    <button onclick="registerRealUser()">Register Real User with Valid ObjectId</button>
+    <button onclick="testSocialWithRealUser()">Test Social Features with Real User</button>
+    <button onclick="clearTestData()">Clear Test Data</button>
+
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let realUser = null;
+        let testIssueId = null;
+
+        function logResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            document.getElementById('results').appendChild(div);
+        }
+
+        async function registerRealUser() {
+            try {
+                // First clear any existing user
+                localStorage.removeItem('janavaani_user');
+                
+                const userData = {
+                    name: 'Real Test User',
+                    email: 'realtest@example.com',
+                    password: 'password123',
+                    phoneNumber: '9876543210',
+                    userType: 'citizen'
+                };
+
+                logResult('Registering user with proper MongoDB ObjectId...', 'info');
+
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    realUser = data.user;
+                    localStorage.setItem('janavaani_user', JSON.stringify(realUser));
+                    logResult(`✅ User registered successfully!`, 'success');
+                    logResult(`User ID: ${realUser.id} (${realUser.id.length} characters)`, 'info');
+                    logResult(`User data: <pre>${JSON.stringify(realUser, null, 2)}</pre>`, 'info');
+                } else {
+                    if (data.message.includes('already exists')) {
+                        // Try to login instead
+                        logResult('User already exists, trying to login...', 'info');
+                        await loginRealUser();
+                    } else {
+                        logResult(`❌ Registration failed: ${data.message}`, 'error');
+                    }
+                }
+            } catch (error) {
+                logResult(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function loginRealUser() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'realtest@example.com',
+                        password: 'password123'
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    realUser = data.user;
+                    localStorage.setItem('janavaani_user', JSON.stringify(realUser));
+                    logResult(`✅ User logged in successfully!`, 'success');
+                    logResult(`User ID: ${realUser.id} (${realUser.id.length} characters)`, 'info');
+                } else {
+                    logResult(`❌ Login failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                logResult(`❌ Login error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSocialWithRealUser() {
+            if (!realUser) {
+                logResult('❌ Please register a real user first', 'error');
+                return;
+            }
+
+            try {
+                // First create a test issue
+                logResult('Creating test issue...', 'info');
+                const issueData = {
+                    title: 'Social Features Test Issue',
+                    description: 'Testing social features with proper ObjectId user',
+                    category: 'Infrastructure',
+                    priority: 'medium',
+                    location: {
+                        state: 'Andhra Pradesh',
+                        district: 'Guntur',
+                        mandal: 'Tenali',
+                        village: 'Kollipara',
+                        address: 'Main Road',
+                        pincode: '522201'
+                    },
+                    submittedBy: {
+                        userId: realUser.id,
+                        name: realUser.name,
+                        email: realUser.email,
+                        phone: realUser.phoneNumber
+                    }
+                };
+
+                const issueResponse = await fetch(`${API_BASE}/issues`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(issueData)
+                });
+
+                if (issueResponse.ok) {
+                    const issueData = await issueResponse.json();
+                    testIssueId = issueData.issue._id;
+                    logResult(`✅ Test issue created: ${testIssueId}`, 'success');
+
+                    // Test like
+                    await testLike();
+                    // Test vote
+                    await testVote();
+                    // Test comment
+                    await testComment();
+                    // Test share
+                    await testShare();
+
+                } else {
+                    const errorData = await issueResponse.json();
+                    logResult(`❌ Issue creation failed: ${errorData.message}`, 'error');
+                }
+
+            } catch (error) {
+                logResult(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLike() {
+            try {
+                logResult('Testing like functionality...', 'info');
+                const response = await fetch(`${API_BASE}/issues/${testIssueId}/like`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: realUser.id,
+                        userName: realUser.name
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    logResult(`✅ Like test passed: ${data.message}`, 'success');
+                } else {
+                    const errorData = await response.json();
+                    logResult(`❌ Like test failed: ${errorData.message}`, 'error');
+                }
+            } catch (error) {
+                logResult(`❌ Like test error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testVote() {
+            try {
+                logResult('Testing vote functionality...', 'info');
+                const response = await fetch(`${API_BASE}/issues/${testIssueId}/vote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: realUser.id,
+                        userName: realUser.name,
+                        voteType: 'upvote'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    logResult(`✅ Vote test passed: ${data.message}`, 'success');
+                } else {
+                    const errorData = await response.json();
+                    logResult(`❌ Vote test failed: ${errorData.message}`, 'error');
+                }
+            } catch (error) {
+                logResult(`❌ Vote test error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testComment() {
+            try {
+                logResult('Testing comment functionality...', 'info');
+                const response = await fetch(`${API_BASE}/issues/${testIssueId}/comment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: realUser.id,
+                        userName: realUser.name,
+                        comment: 'This is a test comment with proper ObjectId'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    logResult(`✅ Comment test passed: ${data.message}`, 'success');
+                } else {
+                    const errorData = await response.json();
+                    logResult(`❌ Comment test failed: ${errorData.message}`, 'error');
+                }
+            } catch (error) {
+                logResult(`❌ Comment test error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testShare() {
+            try {
+                logResult('Testing share functionality...', 'info');
+                const response = await fetch(`${API_BASE}/issues/${testIssueId}/share`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: realUser.id,
+                        userName: realUser.name,
+                        platform: 'internal'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    logResult(`✅ Share test passed: ${data.message}`, 'success');
+                } else {
+                    const errorData = await response.json();
+                    logResult(`❌ Share test failed: ${errorData.message}`, 'error');
+                }
+            } catch (error) {
+                logResult(`❌ Share test error: ${error.message}`, 'error');
+            }
+        }
+
+        function clearTestData() {
+            localStorage.removeItem('janavaani_user');
+            realUser = null;
+            testIssueId = null;
+            document.getElementById('results').innerHTML = '';
+            logResult('Test data cleared', 'info');
+        }
+
+        // Check if user is already logged in
+        window.onload = function() {
+            const userData = localStorage.getItem('janavaani_user');
+            if (userData) {
+                try {
+                    realUser = JSON.parse(userData);
+                    logResult(`Found existing user: ${realUser.name} (ID: ${realUser.id})`, 'info');
+                } catch (e) {
+                    logResult('Error parsing existing user data', 'error');
+                }
+            }
+        };
+    </script>
+</body>
+</html>

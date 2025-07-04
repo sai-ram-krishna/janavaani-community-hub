@@ -23,8 +23,12 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/issues', issueRoutes);
 
-// Serve index.html for all other routes (SPA fallback)
+// Serve index.html for all other routes (SPA fallback), but NOT for API routes
 app.get('*', (req, res) => {
+  // Don't serve HTML for API routes
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ message: 'API endpoint not found' });
+  }
   res.sendFile(path.join(__dirname, '../client/index.html'));
 });
 
