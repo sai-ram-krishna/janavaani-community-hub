@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Issue Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Dashboard Issue Submission Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Instructions:</h2>
+        <ol>
+            <li>First, register a new user</li>
+            <li>Login with that user</li>
+            <li>Try to submit an issue</li>
+            <li>Check browser console for debugging info</li>
+        </ol>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 1: Register New User</h2>
+        <button onclick="registerUser()">Register Test User</button>
+        <div id="registerResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Login</h2>
+        <button onclick="loginUser()">Login Test User</button>
+        <div id="loginResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 3: Check User Data</h2>
+        <button onclick="checkUserData()">Check localStorage User Data</button>
+        <div id="userDataResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 4: Submit Issue</h2>
+        <button onclick="submitIssue()">Submit Test Issue</button>
+        <div id="issueResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 5: Go to Dashboard</h2>
+        <p>After running the tests above, go to the dashboard to test issue submission:</p>
+        <a href="https://janavaani-community-hub.onrender.com/dashboard.html" target="_blank">
+            Open Dashboard
+        </a>
+    </div>
+
+    <script>
+        const BASE_URL = 'https://janavaani-community-hub.onrender.com';
+        let testUser = null;
+        
+        async function registerUser() {
+            const testUserData = {
+                name: 'Dashboard Test User ' + Date.now(),
+                email: 'dashtest' + Date.now() + '@example.com',
+                phone: '9876543210',
+                password: 'testPassword123',
+                userType: 'citizen'
+            };
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testUserData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    testUser = { ...testUserData, serverData: data.user };
+                    document.getElementById('registerResult').innerHTML = 
+                        `<div class="success">✅ Registration successful!<br>
+                        User ID: ${data.user.id}<br>
+                        Email: ${data.user.email}</div>`;
+                } else {
+                    document.getElementById('registerResult').innerHTML = 
+                        `<div class="error">❌ Registration failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('registerResult').innerHTML = 
+                    `<div class="error">❌ Registration error: ${error.message}</div>`;
+            }
+        }
+        
+        async function loginUser() {
+            if (!testUser) {
+                document.getElementById('loginResult').innerHTML = 
+                    '<div class="error">❌ Please register a user first</div>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: testUser.email,
+                        password: testUser.password,
+                        userType: testUser.userType
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Store in localStorage just like the real app
+                    localStorage.setItem('janavaani_user', JSON.stringify(data.user));
+                    
+                    document.getElementById('loginResult').innerHTML = 
+                        `<div class="success">✅ Login successful!<br>
+                        User stored in localStorage<br>
+                        User ID: ${data.user.id}</div>`;
+                } else {
+                    document.getElementById('loginResult').innerHTML = 
+                        `<div class="error">❌ Login failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('loginResult').innerHTML = 
+                    `<div class="error">❌ Login error: ${error.message}</div>`;
+            }
+        }
+        
+        function checkUserData() {
+            const userData = localStorage.getItem('janavaani_user');
+            if (userData) {
+                const user = JSON.parse(userData);
+                document.getElementById('userDataResult').innerHTML = 
+                    `<div class="success">✅ User data in localStorage:<br>
+                    <pre>${JSON.stringify(user, null, 2)}</pre>
+                    <br>User ID: ${user.id || user._id || user.userId || 'NOT FOUND'}</div>`;
+            } else {
+                document.getElementById('userDataResult').innerHTML = 
+                    '<div class="error">❌ No user data in localStorage</div>';
+            }
+        }
+        
+        async function submitIssue() {
+            const userData = localStorage.getItem('janavaani_user');
+            if (!userData) {
+                document.getElementById('issueResult').innerHTML = 
+                    '<div class="error">❌ No user data found. Please login first.</div>';
+                return;
+            }
+            
+            const user = JSON.parse(userData);
+            const issueData = {
+                title: 'Test Issue from Debug Page',
+                description: 'This is a test issue submitted from the debug page to verify the dashboard functionality.',
+                category: 'infrastructure',
+                priority: 'medium',
+                location: {
+                    state: 'Telangana',
+                    district: 'Hyderabad',
+                    mandal: 'Secunderabad',
+                    village: 'Begumpet',
+                    address: '123 Debug Test Street',
+                    pincode: '500003',
+                    fullAddress: '123 Debug Test Street, Begumpet, Secunderabad, Hyderabad, Telangana'
+                },
+                submittedBy: {
+                    userId: user.id || user._id || user.userId,
+                    name: user.name,
+                    email: user.email,
+                    phone: user.phone || 'Not provided'
+                }
+            };
+            
+            console.log('Submitting issue:', issueData);
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/issues/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(issueData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('issueResult').innerHTML = 
+                        `<div class="success">✅ Issue submitted successfully!<br>
+                        Issue ID: ${result.issue.id}<br>
+                        Title: ${result.issue.title}</div>`;
+                } else {
+                    document.getElementById('issueResult').innerHTML = 
+                        `<div class="error">❌ Issue submission failed!<br>
+                        Error: ${result.message}<br>
+                        <details><pre>${JSON.stringify(result, null, 2)}</pre></details></div>`;
+                }
+            } catch (error) {
+                document.getElementById('issueResult').innerHTML = 
+                    `<div class="error">❌ Issue submission error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
